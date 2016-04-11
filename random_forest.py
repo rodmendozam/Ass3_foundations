@@ -5,7 +5,7 @@ import math
 import matplotlib.pyplot as plt
 from matplotlib import pyplot as plt
 import numpy as np
-from sklearn.metrics import zero_one_loss
+from sklearn.metrics import zero_one_loss, roc_auc_score
 from sklearn.cross_validation import cross_val_score
 from sklearn.cross_validation import KFold, Bootstrap, ShuffleSplit
 from sklearn import cross_validation
@@ -72,6 +72,37 @@ def exercise_2():
     plt.xticks(lst)
     plt.show()
 
+def exercise_3():
+    #connect to openml api
+    apikey = 'ca2397ea8a2cdd9707ef39d76576e786'
+    connector = APIConnector(apikey=apikey)
+    dataset = connector.download_dataset(44)
+    X, y, attribute_names = dataset.get_dataset(target=dataset.default_target_attribute, return_attribute_names=True)
+
+    kf = cross_validation.ShuffleSplit(len(X),n_iter=100, test_size=0.1, train_size=0.9, random_state=0)
+    error = []
+    error_mean = []
+
+    clf = RandomForestClassifier(n_estimators=100, oob_score=True,
+                                   max_features="auto",
+                                   random_state=0)
+
+    error_mean = []
+    for train_index, test_index in kf:
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        clf.fit(X_train, y_train)
+        error_mean.append( roc_auc_score(y_test, clf.predict(X_test)) )
+    error.append( np.array(error_mean).mean() )
+
+    print error
+
+    #plot
+    # plt.style.use('ggplot')
+    # plt.scatter(lst, error)
+    # plt.xticks(lst)
+    # plt.show()
+
 
 if __name__ == "__main__":
-    exercise_1()
+    exercise_3()
